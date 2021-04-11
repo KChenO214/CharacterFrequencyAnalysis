@@ -7,6 +7,7 @@ public class FreqAnalysis {
     private static String[] fileLocation;
     //Array to store frequency of all 26 letters of all files
     private static int[] totalCharFrequency = new int[26];
+    private static int totalCharacter = 0;
 
     public FreqAnalysis(int numOfFiles){
         fileLocation = new String[numOfFiles];
@@ -35,35 +36,47 @@ public class FreqAnalysis {
         }
     }
 
+    //Adds total characters from all files
+    public void setTotalCharacters(int sum, boolean clear){
+        if(!clear)
+            totalCharacter += sum;
+        else
+            totalCharacter = 0;
+    }
+
+    //Returns total characters from all files
+    public int getTotalCharacter(){
+        return totalCharacter;
+    }
+
     //Prints out the frequency of letters in the files
-    public String printFrequency(int[] frequency){
+    public String printFrequency(int[] frequency, int totalCharacter){
         String str = "|";
 
         for(int i = 0; i < 26; i++){
             //Creates the string that holds all the values of the characters
-            str = str + ((char) (i + 65)) + ": " + frequency[i] + "|";
+            str = str + ((char) (i + 65)) + ": " + frequency[i] + ", " + (frequency[i] * 100 / totalCharacter) + "%|";
         }
 
         return str;
     }
 
     //Stores the location of the files
-    public void loadAddress(Scanner scan, String address, int range, FreqAnalysis file){
+    public void loadAddress(Scanner scan, int range){
         //Stores the next line into file location array
-        address = scan.next();
+        String address = scan.next();
         address = address + scan.nextLine();
         fileLocation[range] = address;
     }
 
-    public static void main(String[] args) throws IOException{
+    public static void main(String[] args){
         Scanner scan = new Scanner(System.in);
-        String address = "";
         boolean quit = false;
 
         //Main loop that controls user interaction
         while(!quit){
             //Stores number of files to be search through , range used to store which file was entered incorrectly
-            int numOfFiles = 0, range = 0;
+            int numOfFiles, range = 0;
             FreqAnalysis file;
 
             try{
@@ -76,7 +89,7 @@ public class FreqAnalysis {
                 //Stores the address entered by the user into the array
                 for(int i = 0; i < numOfFiles; i++){
                     System.out.print("File Address " + (i + 1) + ": ");
-                    file.loadAddress(scan, address, i, file);
+                    file.loadAddress(scan, i);
                 }
                 System.out.println();
 
@@ -92,6 +105,7 @@ public class FreqAnalysis {
                             BufferedReader read = new BufferedReader(new FileReader(location));
                             //Storage of character frequencies
                             int[] frequency = new int[26];
+                            int totalCharacters = 0;
 
                             while((str = read.readLine()) != null){
                                 //Making all characters upper case so we can use ascii dec value - 65 to set location on array
@@ -102,31 +116,34 @@ public class FreqAnalysis {
                                     //Checks if ascii of character is A-Z and stores if it is
                                     if(dec > 64 && dec < 91){
                                         frequency[((int) str.charAt(i)) - 65]++;
+                                        totalCharacters++;
                                     }
                                 }
                             }
 
-                            //Combines the frequencies from all files
+                            //Combines the frequencies/character count from all files
                             file.addFrequency(frequency);
+                            file.setTotalCharacters(totalCharacters, false);
 
                             //Prints the file's character frequency
-                            System.out.println("File " + (range + 1) + ": ");
-                            System.out.println(file.printFrequency(frequency));
+                            System.out.println("File " + (range + 1) + ": Format: |[A-Z]: Number of Characters, Percentage|");
+                            System.out.println(file.printFrequency(frequency, totalCharacters));
                             System.out.println("*------");
                         }
 
                         //Prints total character frequency of all files
-                        System.out.println("All files' character frequency:");
-                        System.out.println(file.printFrequency(file.returnTotalFrequency()));
+                        System.out.println("All files' character frequency: Format: |[A-Z]: Number of Characters, Percentage|");
+                        System.out.println(file.printFrequency(file.returnTotalFrequency(), file.getTotalCharacter()));
 
                         //Ends the loop
                         finish = true;
                     }catch(Exception e){
                         //Clears our total frequency array and asks the user to renter the incorrect path address
                         file.clearTotalFrequency();
+                        file.setTotalCharacters(0, true);
                         System.out.println("Invalid file " + (range + 1) + ", try again.");
                         System.out.print("File Address: ");
-                        file.loadAddress(scan, address, range, file);
+                        file.loadAddress(scan, range);
                         System.out.println();
                     }
                 }
